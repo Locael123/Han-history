@@ -26,6 +26,9 @@ type Config struct {
 	JWTSecret     string
 	JWTTTL        time.Duration
 	AllowRegister bool
+	// SeedDemo 控制空库首次启动时是否写入演示史官与示例史枝。
+	// 公开部署可设为 false，从一张白纸开始，避免出现已知口令的演示账号。
+	SeedDemo bool
 
 	DefaultPageSize int
 	MaxPageSize     int
@@ -87,6 +90,7 @@ func Load() *Config {
 		JWTSecret:       env("JWT_SECRET", ""),
 		JWTTTL:          envDur("JWT_TTL", 7*24*time.Hour),
 		AllowRegister:   envBool("ALLOW_REGISTER", true),
+		SeedDemo:        envBool("SEED_DEMO", true),
 		DefaultPageSize: envInt("DEFAULT_PAGE_SIZE", 20),
 		MaxPageSize:     envInt("MAX_PAGE_SIZE", 100),
 		MaxOpenConns:    envInt("DB_MAX_OPEN_CONNS", 4),

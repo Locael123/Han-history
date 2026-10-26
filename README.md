@@ -94,6 +94,16 @@ cd ../backend && go run ./cmd/server
 # 打开 http://127.0.0.1:8090
 ```
 
+## Linux 部署
+
+仓库提供编译好的 Linux amd64 / arm64 发布包构建脚本与部署材料，包含 systemd 单元、nginx 反代、SQLite 在线备份与一键安装脚本。完整步骤见 **[docs/DEPLOY-linux.md](docs/DEPLOY-linux.md)**。
+
+公开部署时建议关闭演示账号：
+
+```bash
+sudo SEED_DEMO=false bash install.sh
+```
+
 ### 演示账号
 
 密码统一为 `123456`。
@@ -121,6 +131,7 @@ cd ../backend && go run ./cmd/server
 | `JWT_SECRET` | 随机 | 未设置时启动生成临时密钥，重启后登录失效 |
 | `JWT_TTL` | `168h` | 令牌有效期 |
 | `ALLOW_REGISTER` | `true` | 是否开放注册 |
+| `SEED_DEMO` | `true` | 空库是否写入演示账号与赞/评论；`false` 时账号口令随机 |
 | `DEFAULT_PAGE_SIZE` | `20` | 默认分页 |
 | `MAX_PAGE_SIZE` | `100` | 分页上限 |
 | `DB_MAX_OPEN_CONNS` | `4` | SQLite 连接池 |

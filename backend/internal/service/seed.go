@@ -1,6 +1,8 @@
 package service
 
 import (
+	crand "crypto/rand"
+	"encoding/hex"
 	"fmt"
 	"log"
 	"time"
@@ -49,7 +51,10 @@ type seedComment struct {
 }
 
 // Seed 在空库上写入一部可浏览的民国史。非空库直接跳过。
-func Seed(db *gorm.DB) error {
+//
+// withDemo 为 false 时仍写入正史主干与史枝，但不写示例点赞、评论，
+// 并给演示账号设置随机口令——公开部署可借此避免 123456 账号。
+func Seed(db *gorm.DB, withDemo bool) error {
 	var userCount, branchCount int64
 	if err := db.Model(&model.User{}).Count(&userCount).Error; err != nil {
 		return err
@@ -62,7 +67,15 @@ func Seed(db *gorm.DB) error {
 	}
 
 	start := time.Now()
-	hash, err := bcrypt.GenerateFromPassword([]byte("123456"), bcrypt.DefaultCost)
+	password := "123456"
+	if !withDemo {
+		buf := make([]byte, 18)
+		if _, err := crand.Read(buf); err != nil {
+			return err
+		}
+		password = hex.EncodeToString(buf)
+	}
+	hash, err := bcrypt.GenerateFromPassword([]byte(password), bcrypt.DefaultCost)
 	if err != nil {
 		return err
 	}
@@ -193,174 +206,179 @@ func Seed(db *gorm.DB) error {
 
 	// ---------- 点赞 ----------
 
-	type likeSpec struct {
-		User       string
-		TargetType string
-		Target     string
-	}
-	likeSpecs := []likeSpec{
-		{"shuoshuren", model.TargetBranch, "正史·共和本纪"},
-		{"baishanke", model.TargetBranch, "正史·共和本纪"},
-		{"tingyuzhe", model.TargetBranch, "正史·共和本纪"},
-		{"jinling", model.TargetBranch, "正史·共和本纪"},
-		{"lingnan", model.TargetBranch, "正史·共和本纪"},
-		{"shiguan", model.TargetBranch, "正史·共和本纪"},
-		{"shuoshuren", model.TargetBranch, "野史·沪上旧梦"},
-		{"tingyuzhe", model.TargetBranch, "野史·沪上旧梦"},
-		{"jinling", model.TargetBranch, "野史·沪上旧梦"},
-		{"baishanke", model.TargetBranch, "野史·关外三十年纪事"},
-		{"shuoshuren", model.TargetBranch, "野史·关外三十年纪事"},
-		{"tingyuzhe", model.TargetBranch, "野史·联大八年"},
-		{"lingnan", model.TargetBranch, "野史·联大八年"},
-		{"jinling", model.TargetBranch, "野史·金陵残照"},
-		{"tingyuzhe", model.TargetBranch, "野史·金陵残照"},
-		{"lingnan", model.TargetBranch, "野史·岭南旧事"},
-		{"baishanke", model.TargetBranch, "野史·岭南旧事"},
-		{"shiguan", model.TargetBranch, "别史·新潮"},
-		{"shiguan", model.TargetBranch, "别史·实业志"},
+	commentTotal := 0
+	if withDemo {
 
-		{"shuoshuren", model.TargetEvent, "清帝退位"},
-		{"tingyuzhe", model.TargetEvent, "清帝退位"},
-		{"jinling", model.TargetEvent, "清帝退位"},
-		{"shuoshuren", model.TargetEvent, "五四运动"},
-		{"baishanke", model.TargetEvent, "五四运动"},
-		{"tingyuzhe", model.TargetEvent, "五四运动"},
-		{"jinling", model.TargetEvent, "五四运动"},
-		{"lingnan", model.TargetEvent, "五四运动"},
-		{"shuoshuren", model.TargetEvent, "四一二"},
-		{"baishanke", model.TargetEvent, "四一二"},
-		{"jinling", model.TargetEvent, "四一二"},
-		{"shuoshuren", model.TargetEvent, "南京陷落"},
-		{"baishanke", model.TargetEvent, "南京陷落"},
-		{"tingyuzhe", model.TargetEvent, "南京陷落"},
-		{"jinling", model.TargetEvent, "南京陷落"},
-		{"lingnan", model.TargetEvent, "开国大典"},
-		{"shuoshuren", model.TargetEvent, "开国大典"},
-		{"tingyuzhe", model.TargetEvent, "开国大典"},
-		{"baishanke", model.TargetEvent, "开国大典"},
-		{"shuoshuren", model.TargetEvent, "百乐门开张"},
-		{"tingyuzhe", model.TargetEvent, "百乐门开张"},
-		{"jinling", model.TargetEvent, "阮玲玉之死"},
-		{"lingnan", model.TargetEvent, "阮玲玉之死"},
-		{"shuoshuren", model.TargetEvent, "阮玲玉之死"},
-		{"tingyuzhe", model.TargetEvent, "西南联大成立"},
-		{"lingnan", model.TargetEvent, "西南联大成立"},
-		{"baishanke", model.TargetEvent, "西南联大成立"},
-		{"baishanke", model.TargetEvent, "伪满洲国成立"},
-		{"shuoshuren", model.TargetEvent, "伪满洲国成立"},
-		{"jinling", model.TargetEvent, "南京受降"},
-		{"tingyuzhe", model.TargetEvent, "南京受降"},
-		{"shuoshuren", model.TargetEvent, "南京受降"},
-		{"lingnan", model.TargetEvent, "黄埔军校开学"},
-		{"baishanke", model.TargetEvent, "黄埔军校开学"},
-	}
-	seenLike := map[string]bool{}
-	for _, spec := range likeSpecs {
-		u, ok := findUser(spec.User)
-		if !ok {
-			continue
+		type likeSpec struct {
+			User       string
+			TargetType string
+			Target     string
 		}
-		var targetID uint64
-		switch spec.TargetType {
-		case model.TargetBranch:
-			b, ok := branchByName[spec.Target]
-			if !ok {
-				continue
-			}
-			targetID = b.ID
-		case model.TargetEvent:
-			e, ok := eventByTitle[spec.Target]
-			if !ok {
-				continue
-			}
-			targetID = e.ID
-		}
-		key := fmt.Sprintf("%d|%s|%d", u.ID, spec.TargetType, targetID)
-		if seenLike[key] {
-			continue
-		}
-		seenLike[key] = true
-		if err := db.Create(&model.Like{
-			UserID:     u.ID,
-			TargetType: spec.TargetType,
-			TargetID:   targetID,
-			CreatedAt:  now.AddDate(0, 0, -3),
-		}).Error; err != nil {
-			return err
-		}
-	}
+		likeSpecs := []likeSpec{
+			{"shuoshuren", model.TargetBranch, "正史·共和本纪"},
+			{"baishanke", model.TargetBranch, "正史·共和本纪"},
+			{"tingyuzhe", model.TargetBranch, "正史·共和本纪"},
+			{"jinling", model.TargetBranch, "正史·共和本纪"},
+			{"lingnan", model.TargetBranch, "正史·共和本纪"},
+			{"shiguan", model.TargetBranch, "正史·共和本纪"},
+			{"shuoshuren", model.TargetBranch, "野史·沪上旧梦"},
+			{"tingyuzhe", model.TargetBranch, "野史·沪上旧梦"},
+			{"jinling", model.TargetBranch, "野史·沪上旧梦"},
+			{"baishanke", model.TargetBranch, "野史·关外三十年纪事"},
+			{"shuoshuren", model.TargetBranch, "野史·关外三十年纪事"},
+			{"tingyuzhe", model.TargetBranch, "野史·联大八年"},
+			{"lingnan", model.TargetBranch, "野史·联大八年"},
+			{"jinling", model.TargetBranch, "野史·金陵残照"},
+			{"tingyuzhe", model.TargetBranch, "野史·金陵残照"},
+			{"lingnan", model.TargetBranch, "野史·岭南旧事"},
+			{"baishanke", model.TargetBranch, "野史·岭南旧事"},
+			{"shiguan", model.TargetBranch, "别史·新潮"},
+			{"shiguan", model.TargetBranch, "别史·实业志"},
 
-	// ---------- 评论 ----------
+			{"shuoshuren", model.TargetEvent, "清帝退位"},
+			{"tingyuzhe", model.TargetEvent, "清帝退位"},
+			{"jinling", model.TargetEvent, "清帝退位"},
+			{"shuoshuren", model.TargetEvent, "五四运动"},
+			{"baishanke", model.TargetEvent, "五四运动"},
+			{"tingyuzhe", model.TargetEvent, "五四运动"},
+			{"jinling", model.TargetEvent, "五四运动"},
+			{"lingnan", model.TargetEvent, "五四运动"},
+			{"shuoshuren", model.TargetEvent, "四一二"},
+			{"baishanke", model.TargetEvent, "四一二"},
+			{"jinling", model.TargetEvent, "四一二"},
+			{"shuoshuren", model.TargetEvent, "南京陷落"},
+			{"baishanke", model.TargetEvent, "南京陷落"},
+			{"tingyuzhe", model.TargetEvent, "南京陷落"},
+			{"jinling", model.TargetEvent, "南京陷落"},
+			{"lingnan", model.TargetEvent, "开国大典"},
+			{"shuoshuren", model.TargetEvent, "开国大典"},
+			{"tingyuzhe", model.TargetEvent, "开国大典"},
+			{"baishanke", model.TargetEvent, "开国大典"},
+			{"shuoshuren", model.TargetEvent, "百乐门开张"},
+			{"tingyuzhe", model.TargetEvent, "百乐门开张"},
+			{"jinling", model.TargetEvent, "阮玲玉之死"},
+			{"lingnan", model.TargetEvent, "阮玲玉之死"},
+			{"shuoshuren", model.TargetEvent, "阮玲玉之死"},
+			{"tingyuzhe", model.TargetEvent, "西南联大成立"},
+			{"lingnan", model.TargetEvent, "西南联大成立"},
+			{"baishanke", model.TargetEvent, "西南联大成立"},
+			{"baishanke", model.TargetEvent, "伪满洲国成立"},
+			{"shuoshuren", model.TargetEvent, "伪满洲国成立"},
+			{"jinling", model.TargetEvent, "南京受降"},
+			{"tingyuzhe", model.TargetEvent, "南京受降"},
+			{"shuoshuren", model.TargetEvent, "南京受降"},
+			{"lingnan", model.TargetEvent, "黄埔军校开学"},
+			{"baishanke", model.TargetEvent, "黄埔军校开学"},
+		}
+		seenLike := map[string]bool{}
+		for _, spec := range likeSpecs {
+			u, ok := findUser(spec.User)
+			if !ok {
+				continue
+			}
+			var targetID uint64
+			switch spec.TargetType {
+			case model.TargetBranch:
+				b, ok := branchByName[spec.Target]
+				if !ok {
+					continue
+				}
+				targetID = b.ID
+			case model.TargetEvent:
+				e, ok := eventByTitle[spec.Target]
+				if !ok {
+					continue
+				}
+				targetID = e.ID
+			}
+			key := fmt.Sprintf("%d|%s|%d", u.ID, spec.TargetType, targetID)
+			if seenLike[key] {
+				continue
+			}
+			seenLike[key] = true
+			if err := db.Create(&model.Like{
+				UserID:     u.ID,
+				TargetType: spec.TargetType,
+				TargetID:   targetID,
+				CreatedAt:  now.AddDate(0, 0, -3),
+			}).Error; err != nil {
+				return err
+			}
+		}
 
-	commentSeeds := []seedComment{
-		{model.TargetBranch, "正史·共和本纪", "说书人", "正史是骨架，野史才是血肉。", ""},
-		{model.TargetBranch, "正史·共和本纪", "白山客", "关外那十四年，在本纪里只占两行，实在太轻。", ""},
-		{model.TargetBranch, "野史·沪上旧梦", "听雨者", "百乐门那一段写得像旧画报，连香水味都出来了。", ""},
-		{model.TargetBranch, "野史·沪上旧梦", "金陵旧客", "阮玲玉出殡那年，我祖母就在上海，说人山人海。", ""},
-		{model.TargetBranch, "野史·关外三十年纪事", "说书人", "十四年，一句话带过，太轻了。", ""},
-		{model.TargetBranch, "野史·联大八年", "岭南生", "茅屋铁皮，弦歌不辍，这八个字就够了。", ""},
-		{model.TargetEvent, "四一二", "白山客", "这一页太沉，翻过去手都是抖的。", ""},
-		{model.TargetEvent, "百乐门开张", "说书人", "开张那晚，据说全上海的汽车都堵在静安寺路。", ""},
-		{model.TargetEvent, "百乐门开张", "听雨者", "堵车我信，老照片里车牌一直排到愚园路。", "说书人"},
-		{model.TargetEvent, "西南联大成立", "岭南生", "铁皮屋顶下听课，雨声大过先生的声音。", ""},
-		{model.TargetEvent, "南京受降", "金陵旧客", "外公当年在中央军校外围维持秩序，回来只说了一句：结束了。", ""},
-		{model.TargetEvent, "开国大典", "说书人", "一个时代落幕，另一个时代开始。", ""},
-		{model.TargetEvent, "日本宣布投降", "tingyuzhe", "重庆的鞭炮声，隔了八十多年还听得见。", ""},
-	}
-	commentKey := map[string]uint64{}
-	commentUserKey := func(targetType, target, username string) string {
-		return targetType + "|" + target + "|" + username
-	}
-	for i, c := range commentSeeds {
-		u, ok := findUser(c.User)
-		if !ok {
-			continue
+		// ---------- 评论 ----------
+
+		commentSeeds := []seedComment{
+			{model.TargetBranch, "正史·共和本纪", "说书人", "正史是骨架，野史才是血肉。", ""},
+			{model.TargetBranch, "正史·共和本纪", "白山客", "关外那十四年，在本纪里只占两行，实在太轻。", ""},
+			{model.TargetBranch, "野史·沪上旧梦", "听雨者", "百乐门那一段写得像旧画报，连香水味都出来了。", ""},
+			{model.TargetBranch, "野史·沪上旧梦", "金陵旧客", "阮玲玉出殡那年，我祖母就在上海，说人山人海。", ""},
+			{model.TargetBranch, "野史·关外三十年纪事", "说书人", "十四年，一句话带过，太轻了。", ""},
+			{model.TargetBranch, "野史·联大八年", "岭南生", "茅屋铁皮，弦歌不辍，这八个字就够了。", ""},
+			{model.TargetEvent, "四一二", "白山客", "这一页太沉，翻过去手都是抖的。", ""},
+			{model.TargetEvent, "百乐门开张", "说书人", "开张那晚，据说全上海的汽车都堵在静安寺路。", ""},
+			{model.TargetEvent, "百乐门开张", "听雨者", "堵车我信，老照片里车牌一直排到愚园路。", "说书人"},
+			{model.TargetEvent, "西南联大成立", "岭南生", "铁皮屋顶下听课，雨声大过先生的声音。", ""},
+			{model.TargetEvent, "南京受降", "金陵旧客", "外公当年在中央军校外围维持秩序，回来只说了一句：结束了。", ""},
+			{model.TargetEvent, "开国大典", "说书人", "一个时代落幕，另一个时代开始。", ""},
+			{model.TargetEvent, "日本宣布投降", "tingyuzhe", "重庆的鞭炮声，隔了八十多年还听得见。", ""},
 		}
-		var targetID uint64
-		switch c.TargetType {
-		case model.TargetBranch:
-			b, ok := branchByName[c.Target]
+		commentKey := map[string]uint64{}
+		commentUserKey := func(targetType, target, username string) string {
+			return targetType + "|" + target + "|" + username
+		}
+		for i, c := range commentSeeds {
+			u, ok := findUser(c.User)
 			if !ok {
 				continue
 			}
-			targetID = b.ID
-		case model.TargetEvent:
-			e, ok := eventByTitle[c.Target]
-			if !ok {
-				continue
+			var targetID uint64
+			switch c.TargetType {
+			case model.TargetBranch:
+				b, ok := branchByName[c.Target]
+				if !ok {
+					continue
+				}
+				targetID = b.ID
+			case model.TargetEvent:
+				e, ok := eventByTitle[c.Target]
+				if !ok {
+					continue
+				}
+				targetID = e.ID
 			}
-			targetID = e.ID
-		}
-		replyID := uint64(0)
-		replyName := ""
-		if c.ReplyTo != "" {
-			if id, ok := commentKey[commentUserKey(c.TargetType, c.Target, c.ReplyTo)]; ok {
-				replyID = id
-				if ru, ok := findUser(c.ReplyTo); ok {
-					replyName = ru.Nickname
+			replyID := uint64(0)
+			replyName := ""
+			if c.ReplyTo != "" {
+				if id, ok := commentKey[commentUserKey(c.TargetType, c.Target, c.ReplyTo)]; ok {
+					replyID = id
+					if ru, ok := findUser(c.ReplyTo); ok {
+						replyName = ru.Nickname
+					}
 				}
 			}
+			row := model.Comment{
+				TargetType:  c.TargetType,
+				TargetID:    targetID,
+				UserID:      u.ID,
+				ReplyToID:   replyID,
+				ReplyToName: replyName,
+				Content:     c.Content,
+				CreatedAt:   now.Add(-time.Duration(i*7+2) * time.Hour),
+			}
+			if err := db.Create(&row).Error; err != nil {
+				return err
+			}
+			commentKey[commentUserKey(c.TargetType, c.Target, c.User)] = row.ID
 		}
-		row := model.Comment{
-			TargetType:  c.TargetType,
-			TargetID:    targetID,
-			UserID:      u.ID,
-			ReplyToID:   replyID,
-			ReplyToName: replyName,
-			Content:     c.Content,
-			CreatedAt:   now.Add(-time.Duration(i*7+2) * time.Hour),
-		}
-		if err := db.Create(&row).Error; err != nil {
-			return err
-		}
-		commentKey[commentUserKey(c.TargetType, c.Target, c.User)] = row.ID
+		commentTotal = len(commentSeeds)
 	}
 
 	if err := recalcCounters(db); err != nil {
 		return err
 	}
 	log.Printf("[seed] 已写入 %d 位史官、%d 条史枝、%d 条实录、%d 条评论（耗时 %s）",
-		len(users), len(branchByName), len(eventByTitle), len(commentSeeds), time.Since(start).Round(time.Millisecond))
+		len(users), len(branchByName), len(eventByTitle), commentTotal, time.Since(start).Round(time.Millisecond))
 	return nil
 }
 

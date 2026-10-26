@@ -27,7 +27,7 @@ func main() {
 	}
 	defer db.Close(gdb)
 
-	if err := service.Seed(gdb); err != nil {
+	if err := service.Seed(gdb, cfg.SeedDemo); err != nil {
 		log.Fatalf("[boot] 初始化史稿失败: %v", err)
 	}
 

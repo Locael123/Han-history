@@ -4,6 +4,8 @@ web/dist/
 backend/data/
 .e2e/
 shots/
+release/
+.remote-check/
 
 # 本地数据库
 *.db

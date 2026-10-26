@@ -1,0 +1,37 @@
+[Unit]
+Description=Gonghe Shilu - 中华共和实录·野
+Documentation=file://__PREFIX__/DEPLOY.md
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=__USER__
+Group=__USER__
+WorkingDirectory=__PREFIX__
+EnvironmentFile=__CONF_DIR__/gonghe.env
+Environment=TZ=Asia/Shanghai
+ExecStart=__PREFIX__/gonghe
+Restart=on-failure
+RestartSec=3s
+TimeoutStopSec=15s
+LimitNOFILE=65536
+SyslogIdentifier=gonghe
+
+# 基础加固：只允许写数据目录，其余文件系统只读
+NoNewPrivileges=true
+PrivateTmp=true
+PrivateDevices=true
+ProtectSystem=strict
+ProtectHome=true
+ProtectKernelTunables=true
+ProtectKernelModules=true
+ProtectControlGroups=true
+RestrictAddressFamilies=AF_INET AF_INET6 AF_UNIX
+ReadWritePaths=__DATA_DIR__
+
+StandardOutput=journal
+StandardError=journal
+
+[Install]
+WantedBy=multi-user.target
