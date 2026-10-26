@@ -46,11 +46,11 @@ export function timeAgo(iso: string): string {
   return `${d.getFullYear()}.${pad(d.getMonth() + 1)}.${pad(d.getDate())}`
 }
 
-/** 民国纪年，用于副标 */
+/** 共和纪年（一九四九年为共和元年），用于副标 */
 export function republicYear(year: number): string {
-  const n = year - 1911
-  if (n <= 0) return '前民国'
-  return `民国 ${n} 年`
+  const n = year - 1948
+  if (n <= 0) return '前共和'
+  return `共和 ${n} 年`
 }
 
 const FOLK_TONES = ['#96703f', '#3f4c58', '#5c6b4f', '#7c241b', '#6b4a5a']

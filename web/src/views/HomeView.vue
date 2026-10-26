@@ -25,22 +25,18 @@ const officialBranches = computed(() => branches.value.filter((b) => b.official)
 
 onMounted(async () => {
   try {
-    const [s, flk, br, g] = await Promise.all([
+    const [s, off, flk, br, g] = await Promise.all([
       api.stats(),
-      api.events({ scope: 'folk', sort: 'latest', pageSize: 5 }),
+      api.events({ scope: 'official', sort: 'year', pageSize: 5 }),
+      api.events({ scope: 'folk', sort: 'year', pageSize: 5 }),
       api.branches({ sort: 'hot', pageSize: 6 }),
       api.graph(),
     ])
     stats.value = s
+    official.value = off.list
     folk.value = flk.list
     branches.value = br.list
     graph.value = g
-
-    const trunk = g.find((n) => !n.parentId && n.official)
-    if (trunk) {
-      const tl = await api.branchTimeline(trunk.id, 1, 5)
-      official.value = tl.list
-    }
   } catch (e) {
     ElMessage.error((e as Error).message)
   } finally {

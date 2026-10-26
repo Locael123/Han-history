@@ -29,7 +29,7 @@ function logout() {
         <div class="topbar-left">
           <span>{{ today }}</span>
           <span class="dot"></span>
-          <span class="edition">民间修史 · 自民国元年始</span>
+          <span class="edition">民间修史 · 自共和元年始</span>
         </div>
         <nav class="mainnav">
           <RouterLink to="/">卷首</RouterLink>

@@ -26,7 +26,7 @@ const ownerName = computed(() => props.branch.owner?.nickname || '史馆')
       <template v-if="branch.parentId">
         自《{{ branch.parentName }}》{{ branch.forkYear }} 年分叉 · {{ branch.inheritedCount }} 条承继
       </template>
-      <template v-else>正史主干 · 肇于民国元年</template>
+      <template v-else>正史主干 · 肇于共和元年</template>
     </div>
     <div class="meta">
       <span class="strong">{{ branch.eventCount }} 条实录</span>
