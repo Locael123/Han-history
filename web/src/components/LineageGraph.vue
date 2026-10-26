@@ -42,9 +42,9 @@ const ordered = computed(() =>
 )
 
 const years = computed(() => {
-  if (!props.nodes.length) return { min: 1912, max: 1950 }
-  const starts = props.nodes.map((n) => (n.parentId ? n.forkYear || n.startYear : n.startYear) || 1912)
-  const ends = props.nodes.map((n) => n.endYear || n.startYear || n.forkYear || 1912)
+  if (!props.nodes.length) return { min: 1949, max: 2026 }
+  const starts = props.nodes.map((n) => (n.parentId ? n.forkYear || n.startYear : n.startYear) || 1949)
+  const ends = props.nodes.map((n) => n.endYear || n.startYear || n.forkYear || 1949)
   const min = Math.min(...starts)
   const max = Math.max(...ends)
   return { min: min - 1, max: Math.max(max + 1, min + 6) }

@@ -1,6 +1,6 @@
 const CN_NUM = ['〇', '一', '二', '三', '四', '五', '六', '七', '八', '九']
 
-/** 1912 → 一九一二（用于报头与年份大数字下方的小字） */
+/** 1949 → 一九四九（用于报头与年份大数字下方的小字） */
 export function chineseYear(year: number): string {
   if (!year) return ''
   return String(year)
@@ -13,7 +13,7 @@ export function pad(n: number): string {
   return String(n).padStart(2, '0')
 }
 
-/** 1912.01.01 / 1912.01 / 1912 */
+/** 1949.10.01 / 1949.10 / 1949 */
 export function shortDate(year: number, month: number, day: number): string {
   if (!year) return '年份未详'
   if (!month) return `${year}`

@@ -61,7 +61,7 @@ type Branch struct {
 
 // Event 是一条历史条目（一次「提交」）。
 //
-// 时间用年 / 月 / 日三个整数存：民国史的精度常常只到年或月，
+// 时间用年 / 月 / 日三个整数存：史料的精度常常只到年或月，
 // 用 DATE 会逼着调用方编造一个「1 日」，排序也不方便。
 type Event struct {
 	ID       uint64 `gorm:"primaryKey;autoIncrement" json:"id"`
