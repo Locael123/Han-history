@@ -6,7 +6,7 @@ import { api } from '@/api'
 import type { BranchCard, GraphNode, Stats, TimelineItem } from '@/api/types'
 import BranchCardView from '@/components/BranchCard.vue'
 import LineageGraph from '@/components/LineageGraph.vue'
-import { republicYear } from '@/utils/format'
+import { ganzhiYear } from '@/utils/format'
 
 const router = useRouter()
 
@@ -53,7 +53,7 @@ function goBranch(id: number) {
   <div class="page-wrap home" v-loading="loading">
     <section class="hero rise">
       <div class="hero-main">
-        <div class="hero-date">{{ today }}　·　{{ republicYear(thisYear) }}</div>
+        <div class="hero-date">{{ today }}　·　岁在{{ ganzhiYear(thisYear) }}</div>
         <h2 class="hero-title">正史一树<br />野史千枝</h2>
         <p class="lede">
           《中华共和实录》只修一条主干。其余，由读史的人各自接续——你在哪一年不肯点头，就在哪一年另开一枝。

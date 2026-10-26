@@ -3,6 +3,7 @@ import { computed, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { ElMessage } from 'element-plus'
 import { useAuthStore } from '@/stores/auth'
+import { republicYear } from '@/utils/format'
 
 const auth = useAuthStore()
 const router = useRouter()
@@ -10,6 +11,7 @@ const router = useRouter()
 const today = computed(() =>
   new Intl.DateTimeFormat('zh-CN', { year: 'numeric', month: 'long', day: 'numeric' }).format(new Date()),
 )
+const era = computed(() => republicYear(new Date().getFullYear()))
 
 onMounted(() => {
   if (auth.isLoggedIn && !auth.me) auth.fetchMe()
@@ -30,6 +32,8 @@ function logout() {
           <span>{{ today }}</span>
           <span class="dot"></span>
           <span class="edition">民间修史 · 自共和元年始</span>
+          <span class="dot"></span>
+          <span class="era">{{ era }}</span>
         </div>
         <nav class="mainnav">
           <RouterLink to="/">卷首</RouterLink>
@@ -73,6 +77,13 @@ function logout() {
 
 .mainnav .nav-login:hover {
   color: var(--ink);
+}
+
+.era {
+  font-family: var(--serif);
+  color: var(--ink-2);
+  letter-spacing: 0.1em;
+  white-space: nowrap;
 }
 
 .mainnav .nav-register {
@@ -123,6 +134,13 @@ function logout() {
 
 @media (max-width: 860px) {
   .masthead-side {
+    display: none;
+  }
+}
+
+@media (max-width: 720px) {
+  .edition,
+  .edition + .dot {
     display: none;
   }
 }

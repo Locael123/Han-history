@@ -24,6 +24,8 @@ const loading = ref(true)
 const loadingMore = ref(false)
 const likeBusy = ref(false)
 const ownOnly = ref(true)
+const ORDER_KEY = 'gonghe-timeline-desc'
+const desc = ref(localStorage.getItem(ORDER_KEY) === '1')
 
 const eventDialog = ref(false)
 const editingEvent = ref<EventDetail | null>(null)
@@ -46,7 +48,7 @@ async function load() {
   try {
     const [d, t] = await Promise.all([
       api.branch(branchId.value),
-      api.branchTimeline(branchId.value, 1, pageSize, ownOnly.value),
+      api.branchTimeline(branchId.value, 1, pageSize, ownOnly.value, desc.value),
     ])
     detail.value = d
     timeline.value = t.list
@@ -68,11 +70,26 @@ function switchOwn(value: boolean) {
   load()
 }
 
+function switchOrder(value: boolean) {
+  if (desc.value === value) return
+  desc.value = value
+  localStorage.setItem(ORDER_KEY, value ? '1' : '0')
+  load()
+}
+
+function eventOrder(a: TimelineItem, b: TimelineItem): number {
+  return a.year * 10000 + a.month * 100 + a.day - (b.year * 10000 + b.month * 100 + b.day) || a.id - b.id
+}
+
+function resortTimeline() {
+  timeline.value.sort((a, b) => (desc.value ? -eventOrder(a, b) : eventOrder(a, b)))
+}
+
 async function loadMore() {
   loadingMore.value = true
   try {
     const next = page.value + 1
-    const t = await api.branchTimeline(branchId.value, next, pageSize, ownOnly.value)
+    const t = await api.branchTimeline(branchId.value, next, pageSize, ownOnly.value, desc.value)
     timeline.value = [...timeline.value, ...t.list]
     total.value = t.total
     page.value = next
@@ -155,6 +172,7 @@ function onSaved(saved: EventDetail) {
       detail.value.ownCount += 1
     }
   }
+  resortTimeline()
   editingEvent.value = null
 }
 
@@ -284,11 +302,17 @@ async function removeBranch() {
               <span class="ordinal">纪</span>
               <h2>本枝时间轴</h2>
               <span class="rule"></span>
-              <div v-if="detail.parentId" class="seg tl-seg">
-                <button :class="{ on: !ownOnly }" @click="switchOwn(false)">含承继</button>
-                <button :class="{ on: ownOnly }" @click="switchOwn(true)">本枝自记</button>
+              <span v-if="!detail.parentId" class="hint">{{ detail.firstYear || '—' }} — {{ detail.lastYear || '—' }}</span>
+              <div class="tl-controls">
+                <div v-if="detail.parentId" class="seg">
+                  <button :class="{ on: !ownOnly }" @click="switchOwn(false)">含承继</button>
+                  <button :class="{ on: ownOnly }" @click="switchOwn(true)">本枝自记</button>
+                </div>
+                <div class="seg">
+                  <button :class="{ on: !desc }" @click="switchOrder(false)">正序</button>
+                  <button :class="{ on: desc }" @click="switchOrder(true)">倒叙</button>
+                </div>
               </div>
-              <span v-else class="hint">{{ detail.firstYear || '—' }} — {{ detail.lastYear || '—' }}</span>
             </div>
 
             <div v-if="timeline.length" class="timeline">
@@ -440,6 +464,19 @@ async function removeBranch() {
 </template>
 
 <style scoped>
+.tl-controls {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+@media (max-width: 720px) {
+  .tl-controls {
+    width: 100%;
+    justify-content: flex-end;
+  }
+}
+
 .crumbs {
   display: flex;
   gap: 8px;

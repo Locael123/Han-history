@@ -46,7 +46,7 @@ func (h *Handler) BranchTimeline(c *gin.Context) {
 		return
 	}
 	page, size := h.page(c)
-	list, total, err := h.Branches.Timeline(userID(c), id, page, size, c.Query("own") == "1")
+	list, total, err := h.Branches.Timeline(userID(c), id, page, size, c.Query("own") == "1", c.Query("order") == "desc")
 	if err != nil {
 		fail(c, err)
 		return

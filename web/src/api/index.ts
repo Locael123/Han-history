@@ -21,11 +21,12 @@ export const api = {
   branches: (params: { scope?: string; sort?: string; q?: string; page?: number; pageSize?: number } = {}) =>
     request.get<Page<BranchCard>>('/branches', params),
   branch: (id: number) => request.get<BranchDetail>(`/branches/${id}`),
-  branchTimeline: (id: number, page = 1, pageSize = 20, own = false) =>
+  branchTimeline: (id: number, page = 1, pageSize = 20, own = false, desc = false) =>
     request.get<Page<TimelineItem>>(`/branches/${id}/timeline`, {
       page,
       pageSize,
       ...(own ? { own: 1 } : {}),
+      ...(desc ? { order: 'desc' } : {}),
     }),
   fork: (payload: { parentId: number; forkEventId: number; name: string; description: string }) =>
     request.post<BranchDetail>('/branches', payload),

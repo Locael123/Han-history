@@ -156,7 +156,8 @@ func (s *BranchService) Detail(viewerID, id uint64) (*BranchDetail, error) {
 }
 
 // Timeline 返回合并了继承条目的完整时间轴。
-func (s *BranchService) Timeline(viewerID, branchID uint64, page, pageSize int, ownOnly bool) ([]TimelineItem, int64, error) {
+// desc 为真时按年代倒序，便于从最近一条往前读。
+func (s *BranchService) Timeline(viewerID, branchID uint64, page, pageSize int, ownOnly, desc bool) ([]TimelineItem, int64, error) {
 	if _, err := getBranch(s.db, branchID); err != nil {
 		return nil, 0, err
 	}
@@ -174,6 +175,11 @@ func (s *BranchService) Timeline(viewerID, branchID uint64, page, pageSize int, 
 		events = own
 	}
 	sort.SliceStable(events, func(i, j int) bool { return eventLess(events[i], events[j]) })
+	if desc {
+		for i, j := 0, len(events)-1; i < j; i, j = i+1, j-1 {
+			events[i], events[j] = events[j], events[i]
+		}
+	}
 
 	page, size := clampPage(page, pageSize, s.cfg.DefaultPageSize, s.cfg.MaxPageSize)
 	total := int64(len(events))

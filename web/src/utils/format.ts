@@ -13,6 +13,15 @@ export function pad(n: number): string {
   return String(n).padStart(2, '0')
 }
 
+const GAN = ['甲', '乙', '丙', '丁', '戊', '己', '庚', '辛', '壬', '癸']
+const ZHI = ['子', '丑', '寅', '卯', '辰', '巳', '午', '未', '申', '酉', '戌', '亥']
+
+/** 2026 → 丙午（干支纪年，用于卷首日期副标） */
+export function ganzhiYear(year: number): string {
+  if (!year) return ''
+  return GAN[(((year - 4) % 10) + 10) % 10] + ZHI[(((year - 4) % 12) + 12) % 12]
+}
+
 /** 1949.10.01 / 1949.10 / 1949 */
 export function shortDate(year: number, month: number, day: number): string {
   if (!year) return '年份未详'
