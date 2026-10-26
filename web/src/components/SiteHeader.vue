@@ -41,8 +41,8 @@ function logout() {
             <a href="javascript:void(0)" @click="logout">合卷</a>
           </template>
           <template v-else>
-            <RouterLink to="/login">登录</RouterLink>
-            <RouterLink to="/register">入史</RouterLink>
+            <RouterLink to="/login" class="nav-login">登录</RouterLink>
+            <RouterLink to="/register" class="nav-register">注册</RouterLink>
           </template>
         </nav>
       </div>
@@ -67,6 +67,36 @@ function logout() {
 </template>
 
 <style scoped>
+.mainnav .nav-login {
+  color: var(--ink-3);
+}
+
+.mainnav .nav-login:hover {
+  color: var(--ink);
+}
+
+.mainnav .nav-register {
+  padding: 5px 13px 6px;
+  border: 1px solid var(--cinnabar);
+  color: var(--cinnabar);
+  font-size: 11px;
+  letter-spacing: 0.18em;
+  line-height: 1;
+  transition:
+    background 0.2s,
+    color 0.2s;
+}
+
+.mainnav .nav-register:hover,
+.mainnav .nav-register.router-link-active {
+  background: var(--cinnabar);
+  color: var(--paper-2);
+}
+
+.mainnav .nav-register.router-link-active::after {
+  display: none;
+}
+
 .masthead-side {
   text-align: right;
   padding-bottom: 6px;

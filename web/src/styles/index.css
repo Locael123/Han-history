@@ -98,7 +98,11 @@ p {
 }
 
 button {
+  border: 0;
+  background: none;
+  color: inherit;
   font-family: inherit;
+  cursor: pointer;
 }
 
 .page {

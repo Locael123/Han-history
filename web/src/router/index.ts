@@ -48,7 +48,7 @@ const router = createRouter({
       path: '/register',
       name: 'register',
       component: () => import('@/views/AuthView.vue'),
-      meta: { title: '入史' },
+      meta: { title: '注册' },
     },
     {
       path: '/me',

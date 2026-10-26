@@ -49,7 +49,7 @@ onMounted(async () => {
         <div class="me-meta">
           <span>@{{ me?.username }}</span>
           <span class="sep">·</span>
-          <span>{{ joined }}入史</span>
+          <span>{{ joined }}注册</span>
           <span v-if="me?.bio" class="sep">·</span>
           <span v-if="me?.bio">{{ me.bio }}</span>
         </div>

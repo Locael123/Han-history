@@ -49,7 +49,7 @@ async function submit() {
   try {
     if (isRegister.value) {
       await auth.register(form.username.trim(), form.password, form.nickname.trim())
-      ElMessage.success('已入史')
+      ElMessage.success('注册成功，可以开始修史了')
     } else {
       await auth.login(form.username.trim(), form.password)
       ElMessage.success(`欢迎回来，${auth.displayName}`)
@@ -72,10 +72,10 @@ function useDemo() {
 <template>
   <div class="page-wrap auth-page">
     <section class="auth-intro">
-      <div class="kicker">入史 · {{ isRegister ? '立一枝' : '续旧稿' }}</div>
+      <div class="kicker">{{ isRegister ? '注册 · 立一枝' : '登录 · 续旧稿' }}</div>
       <h2>{{ isRegister ? '留一个名号' : '接着上次写' }}</h2>
       <p class="lede">
-        登录不是为了一份档案，是为了让你写下的条目有个署名，也让别人知道这枝史该由谁来续。
+        登录或注册，不是为了一份档案，是为了让你写下的条目有个署名，也让别人知道这枝史该由谁来续。
       </p>
       <dl class="auth-facts">
         <div>
@@ -96,7 +96,7 @@ function useDemo() {
     <section class="auth-card">
       <div class="auth-tabs">
         <button :class="{ on: !isRegister }" @click="switchMode('login')">登录</button>
-        <button :class="{ on: isRegister }" @click="switchMode('register')">入史</button>
+        <button :class="{ on: isRegister }" @click="switchMode('register')">注册</button>
       </div>
 
       <form @submit.prevent="submit">
@@ -126,13 +126,13 @@ function useDemo() {
         </div>
 
         <button class="btn btn-primary auth-submit" type="submit" :disabled="submitting">
-          {{ submitting ? '稍候…' : isRegister ? '立此存照' : '展卷' }}
+          {{ submitting ? '请稍候…' : isRegister ? '注册' : '登录' }}
         </button>
       </form>
 
       <div v-if="!isRegister" class="auth-switch">
-        没有名号？<button class="text-link" @click="switchMode('register')">入史</button>
-        <span class="demo" @click="useDemo">试用：shuoshuren / 123456</span>
+        没有名号？<button class="text-link" @click="switchMode('register')">注册</button>
+        <button class="demo" type="button" @click="useDemo">试用：shuoshuren / 123456</button>
       </div>
       <div v-else class="auth-switch">
         已有名号？<button class="text-link" @click="switchMode('login')">登录</button>
@@ -182,25 +182,34 @@ function useDemo() {
 
 .auth-card {
   border: 1px solid var(--rule);
-  background: var(--wash);
-  padding: 26px 26px 20px;
+  border-top: 2px solid var(--ink);
+  background: var(--paper-2);
+  padding: 28px 30px 24px;
 }
 
 .auth-tabs {
   display: flex;
-  gap: 26px;
+  gap: 30px;
   border-bottom: 1px solid var(--rule);
-  margin-bottom: 22px;
+  margin-bottom: 24px;
 }
 
 .auth-tabs button {
   font-family: var(--serif);
   font-size: 16px;
-  letter-spacing: 0.14em;
+  font-weight: 500;
+  letter-spacing: 0.18em;
   color: var(--ink-3);
-  padding: 0 0 10px;
-  border-bottom: 1px solid transparent;
+  padding: 0 2px 10px;
+  border-bottom: 2px solid transparent;
   transform: translateY(1px);
+  transition:
+    color 0.2s,
+    border-color 0.2s;
+}
+
+.auth-tabs button:hover {
+  color: var(--ink-2);
 }
 
 .auth-tabs button.on {
@@ -208,13 +217,50 @@ function useDemo() {
   border-bottom-color: var(--cinnabar);
 }
 
+.field {
+  margin-bottom: 18px;
+}
+
+.field input {
+  border: 0;
+  border-bottom: 1px solid var(--rule);
+  border-radius: 0;
+  background: transparent;
+  padding: 8px 2px;
+  font-size: 15px;
+  transition: border-color 0.2s;
+}
+
+.field input:focus {
+  border-bottom-color: var(--ink);
+}
+
+.field input::placeholder {
+  color: var(--ink-4);
+}
+
 .auth-submit {
   width: 100%;
-  margin-top: 8px;
+  height: 44px;
+  margin-top: 14px;
+  border-color: var(--cinnabar);
+  background: var(--cinnabar);
+  color: var(--paper-2);
+  font-family: var(--serif);
+  font-size: 14px;
+  font-weight: 500;
+  letter-spacing: 0.24em;
+  text-indent: 0.24em;
+}
+
+.auth-submit:hover {
+  border-color: var(--ink);
+  background: var(--ink);
+  color: var(--paper-2);
 }
 
 .auth-switch {
-  margin-top: 16px;
+  margin-top: 18px;
   font-size: 12px;
   color: var(--ink-3);
   display: flex;
@@ -224,15 +270,20 @@ function useDemo() {
 }
 
 .demo {
-  margin-left: auto;
+  flex-basis: 100%;
+  margin: 8px 0 0;
+  padding: 0 0 2px;
   font-family: var(--mono);
   font-size: 10px;
+  letter-spacing: 0.03em;
   color: var(--ink-4);
-  cursor: pointer;
+  text-align: right;
+  border-bottom: 1px dashed var(--rule-2);
 }
 
 .demo:hover {
   color: var(--cinnabar);
+  border-bottom-color: var(--cinnabar);
 }
 
 @media (max-width: 900px) {
